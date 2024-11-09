@@ -1,8 +1,7 @@
 package com.example.springqbe.user;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,12 +12,12 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public List<User> getUsers(String name, String email, String city) {
+    public Page<User> getUsers(UserFilter filter) {
 
         User probe = User.builder()
-            .name(name)
-            .email(email)
-            .city(city)
+            .name(filter.name())
+            .email(filter.email())
+            .city(filter.city())
             .build();
 
         ExampleMatcher matcher = ExampleMatcher.matching()
@@ -30,8 +29,11 @@ public class UserService {
         // Create an Example instance with the probe and matcher
         Example<User> example = Example.of(probe, matcher);
 
+        Sort sort = Sort.by("id").descending();
+        Pageable pageable = PageRequest.of(filter.page(), filter.size(), sort);
+
         // Query by example with the complex matcher
-        return userRepository.findAll(example);
+        return userRepository.findAll(example, pageable);
     }
 
     public User create(String name, String email, String city) {
